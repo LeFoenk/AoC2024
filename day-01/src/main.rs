@@ -29,5 +29,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Difference: {}", difference);
 
+    // PART 2
+    let mut similarity = 0;
+    for number in left {
+        let count = right.iter().filter(|&&x| x == number).count();
+        similarity = similarity + (number * count as i32);
+    }
+
+    println!("Similarity: {}", similarity);
+
     Ok(())
 }
