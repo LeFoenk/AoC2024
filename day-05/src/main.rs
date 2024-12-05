@@ -46,12 +46,14 @@ fn main() {
     let mut result = 0;
 
     let mut safe = true;
-    for update in updates {
+    let mut unsafe_indeces = vec![];
+    for (index, update) in updates.iter().enumerate() {
         for rule in &rules {
             if let Some(index_1) = update.iter().position(|n| *n == rule.first) {
                 if let Some(index_2) = update.iter().position(|n| *n == rule.second) {
                     if index_2 < index_1 {
                         safe = false;
+                        unsafe_indeces.push(index);
                         break;
                     }
                 }
@@ -66,6 +68,32 @@ fn main() {
     }
 
     println!("Part 1: {}", result);
+
+    result = 0;
+
+    for index in unsafe_indeces {
+        let update: &mut Vec<i32> = updates.get_mut(index).unwrap();
+
+        safe = false;
+        while safe == false {
+            safe = true;
+            for rule in &rules {
+                if let Some(index_1) = update.iter().position(|n| *n == rule.first) {
+                    if let Some(index_2) = update.iter().position(|n| *n == rule.second) {
+                        if index_2 < index_1 {
+                            update.swap(index_2, index_1);
+                            safe = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        let middle = update[update.len() / 2];
+        result += middle;
+    }
+
+    println!("Part 2: {}", result);
 }
 
 struct Rule {
