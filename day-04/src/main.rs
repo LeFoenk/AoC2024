@@ -10,6 +10,10 @@ fn main() {
     let result = table.count_xmas();
 
     println!("Part 1: {}", result);
+
+    let result_2 = table.count_mas_crosses();
+
+    println!("Part 2: {}", result_2);
 }
 
 struct CharTable {
@@ -34,6 +38,68 @@ impl CharTable {
             _ = table.data.pop();
         }
         table
+    }
+
+    fn count_mas_crosses(&self) -> usize {
+        let mut result = 0;
+
+        for (cursor_y, row) in self.data.iter().enumerate() {
+            for (cursor_x, character) in row.iter().enumerate() {
+                if *character == 'A' {
+                    result += self.find_mas_cross(cursor_x, cursor_y);
+                }
+            }
+        }
+
+        result
+    }
+
+    fn find_mas_cross(&self, cursor_x: usize, cursor_y: usize) -> usize {
+        if cursor_x == 0
+            || cursor_x >= (self.data[0].len() - 1)
+            || cursor_y == 0
+            || cursor_y >= (self.data.len() - 1)
+        {
+            return 0;
+        }
+
+        let top_left = self.data[cursor_y - 1][cursor_x - 1];
+        let bot_right = self.data[cursor_y + 1][cursor_x + 1];
+        match top_left {
+            'M' => {
+                if bot_right != 'S' {
+                    return 0;
+                }
+            }
+            'S' => {
+                if bot_right != 'M' {
+                    return 0;
+                }
+            }
+            _ => {
+                return 0;
+            }
+        }
+
+        let top_right = self.data[cursor_y - 1][cursor_x + 1];
+        let bot_left = self.data[cursor_y + 1][cursor_x - 1];
+        match top_right {
+            'M' => {
+                if bot_left != 'S' {
+                    return 0;
+                }
+            }
+            'S' => {
+                if bot_left != 'M' {
+                    return 0;
+                }
+            }
+            _ => {
+                return 0;
+            }
+        }
+
+        return 1;
     }
 
     fn count_xmas(&self) -> usize {
