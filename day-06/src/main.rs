@@ -29,28 +29,36 @@ fn main() {
                 guard.pos_x = x;
                 guard.pos_y = y;
                 guard.direction = Direction::Top;
-                room[y].push(Point::Visited);
+                room[y].push(Point::Visited {
+                    direction: guard.direction.clone(),
+                });
                 x += 1;
             }
             '>' => {
                 guard.pos_x = x;
                 guard.pos_y = y;
                 guard.direction = Direction::Right;
-                room[y].push(Point::Visited);
+                room[y].push(Point::Visited {
+                    direction: guard.direction.clone(),
+                });
                 x += 1;
             }
             'V' => {
                 guard.pos_x = x;
                 guard.pos_y = y;
                 guard.direction = Direction::Bot;
-                room[y].push(Point::Visited);
+                room[y].push(Point::Visited {
+                    direction: guard.direction.clone(),
+                });
                 x += 1;
             }
             '<' => {
                 guard.pos_x = x;
                 guard.pos_y = y;
                 guard.direction = Direction::Left;
-                room[y].push(Point::Visited);
+                room[y].push(Point::Visited {
+                    direction: guard.direction.clone(),
+                });
                 x += 1;
             }
             '\n' => {
@@ -68,12 +76,22 @@ fn main() {
         room.pop();
     }
 
+    let room_start = room.clone();
+    let guard_start = guard.clone();
+
+    let mut visited: Vec<(usize, usize)> = vec![];
     while let Some((x, y)) = guard.infront() {
         if let Some(point) = room.get(y).and_then(|row: &Vec<Point>| row.get(x)) {
             match point {
-                Point::Empty | Point::Visited => {
-                    room[y][x] = Point::Visited;
+                Point::Visited { direction: _ } => {
                     guard.walk();
+                }
+                Point::Empty => {
+                    room[y][x] = Point::Visited {
+                        direction: guard.direction.clone(),
+                    };
+                    guard.walk();
+                    visited.push((x, y));
                 }
                 Point::Blocked => {
                     guard.turn();
@@ -84,25 +102,55 @@ fn main() {
         }
     }
 
-    let mut result = 0;
-    for line in room {
-        for point in line {
-            if point == Point::Visited {
-                result += 1;
+    let mut result = visited.len();
+    println!("Part 1: {}", result);
+
+    result = 0;
+    for (a, b) in visited {
+        guard = guard_start.clone();
+        room = room_start.clone();
+        room[b][a] = Point::Blocked;
+        while let Some((x, y)) = guard.infront() {
+            if let Some(point) = room.get(y).and_then(|row: &Vec<Point>| row.get(x)) {
+                match point {
+                    Point::Blocked => {
+                        guard.turn();
+                    }
+                    Point::Empty => {
+                        room[y][x] = Point::Visited {
+                            direction: guard.direction.clone(),
+                        };
+                        guard.walk();
+                    }
+                    Point::Visited { direction } => {
+                        if *direction == guard.direction {
+                            result += 1;
+                            break;
+                        } else {
+                            room[y][x] = Point::Visited {
+                                direction: guard.direction.clone(),
+                            };
+                            guard.walk();
+                        }
+                    }
+                }
+            } else {
+                break;
             }
         }
     }
 
-    println!("Part 1: {}", result);
+    println!("Part 2: {}", result);
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum Point {
     Empty,
     Blocked,
-    Visited,
+    Visited { direction: Direction },
 }
 
+#[derive(Clone)]
 struct Guard {
     pos_x: usize,
     pos_y: usize,
@@ -159,6 +207,7 @@ impl Guard {
     }
 }
 
+#[derive(PartialEq, Clone)]
 enum Direction {
     Top,
     Bot,
